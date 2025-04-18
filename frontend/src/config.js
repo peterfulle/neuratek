@@ -1,6 +1,6 @@
 // Configuración dinámica de URLs de API
 const getApiBaseUrl = () => {
-  // En producción, usar la URL de Azure
+  // En producción, usar la URL completa del backend de Azure
   if (process.env.NODE_ENV === 'production') {
     return 'https://neuratek-backend-e7haeehjfmfkhchv.canadacentral-01.azurewebsites.net';
   }

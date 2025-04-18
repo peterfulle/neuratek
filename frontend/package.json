@@ -2,7 +2,7 @@
   "name": "fastapi-client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://neuratek.cl",
+  "proxy": "https://neuratek-backend-e7haeehjfmfkhchv.canadacentral-01.azurewebsites.net",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

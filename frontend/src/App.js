@@ -381,24 +381,23 @@ export default function NeuratekChat() {
   };
 
 
-  // Reemplazar la función sendMessage con esta versión actualizada
   const sendMessage = async () => {
     if (!inputText.trim() || loading) return;
     setLoading(true);
     const newUserMessage = { role: "user", text: inputText };
-
+  
     const currentMessages = [
       ...chatHistories[currentChatIndex].messages,
       newUserMessage,
     ];
-
+  
     const newSummary =
       currentMessages.length === 1
         ? newUserMessage.text.length > 20
           ? newUserMessage.text.slice(0, 20) + "..."
           : newUserMessage.text
         : chatHistories[currentChatIndex].summary;
-
+  
     setChatHistories((prev) => {
       const updated = [...prev];
       updated[currentChatIndex] = {
@@ -408,22 +407,28 @@ export default function NeuratekChat() {
       };
       return updated;
     });
-
+  
     const userMessageForAPI = inputText;
     setInputText("");
-
+  
     const startTime = Date.now();
-
+  
     try {
+      // Modificar la llamada fetch con opciones adicionales
       const response = await fetch(`${API_BASE_URL}/ask/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json"
+        },
+        // Importante: no incluir credentials si estás permitiendo todos los orígenes
+        mode: 'cors', // Asegurarse de que usamos el modo CORS
         body: JSON.stringify({
           prompt: userMessageForAPI,
           max_tokens: 1000,
           history: currentMessages,
         }),
       });
+      
       const data = await response.json();
       const endTime = Date.now();
       const timeTaken = Math.round((endTime - startTime) / 1000);
