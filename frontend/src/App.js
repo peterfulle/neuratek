@@ -381,97 +381,108 @@ export default function NeuratekChat() {
   };
 
 
-  // Reemplazar la función sendMessage con esta versión actualizada
-  const sendMessage = async () => {
-    if (!inputText.trim() || loading) return;
-    setLoading(true);
-    const newUserMessage = { role: "user", text: inputText };
 
-    const currentMessages = [
-      ...chatHistories[currentChatIndex].messages,
-      newUserMessage,
-    ];
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const newSummary =
-      currentMessages.length === 1
-        ? newUserMessage.text.length > 20
-          ? newUserMessage.text.slice(0, 20) + "..."
-          : newUserMessage.text
-        : chatHistories[currentChatIndex].summary;
+// Reemplazar la función sendMessage con esta versión actualizada
+const sendMessage = async () => {
+  if (!inputText.trim() || loading) return;
+  setLoading(true);
+
+  const newUserMessage = { role: "user", text: inputText };
+
+  const currentMessages = [
+    ...chatHistories[currentChatIndex].messages,
+    newUserMessage,
+  ];
+
+  const newSummary =
+    currentMessages.length === 1
+      ? newUserMessage.text.length > 20
+        ? newUserMessage.text.slice(0, 20) + "..."
+        : newUserMessage.text
+      : chatHistories[currentChatIndex].summary;
+
+  setChatHistories((prev) => {
+    const updated = [...prev];
+    updated[currentChatIndex] = {
+      ...updated[currentChatIndex],
+      messages: currentMessages,
+      summary: newSummary,
+    };
+    return updated;
+  });
+
+  const userMessageForAPI = inputText;
+  setInputText("");
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/ask/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: userMessageForAPI,
+        max_tokens: 1000,
+        history: currentMessages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const endTime = Date.now();
+    const timeTaken = Math.round((endTime - startTime) / 1000);
+    const reasoning = `Razonando durante ${timeTaken} segundo${timeTaken !== 1 ? "s" : ""}`;
+
+    let response_text = data.response || "No se recibió respuesta.";
+
+    const marker = "Asistente (responde brevemente en una sola oración, sin repetir el prompt y finaliza con un cierre breve):";
+    if (response_text.includes(marker)) {
+      response_text = response_text.split(marker)[1].trim();
+    }
+
+    const botMessage = {
+      role: "bot",
+      text: response_text,
+      reasoning: reasoning,
+    };
 
     setChatHistories((prev) => {
       const updated = [...prev];
       updated[currentChatIndex] = {
         ...updated[currentChatIndex],
-        messages: currentMessages,
-        summary: newSummary,
+        messages: [...updated[currentChatIndex].messages, botMessage],
       };
       return updated;
     });
+  } catch (error) {
+    console.error("API Error:", error);
+    const endTime = Date.now();
+    const timeTaken = Math.round((endTime - startTime) / 1000);
+    const reasoning = `Razonando durante ${timeTaken} segundo${timeTaken !== 1 ? "s" : ""}`;
+    const errorMsg = {
+      role: "bot",
+      text: "⚠️ Error al obtener respuesta.",
+      reasoning: reasoning,
+    };
 
-    const userMessageForAPI = inputText;
-    setInputText("");
-
-    const startTime = Date.now();
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/ask/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: userMessageForAPI,
-          max_tokens: 1000,
-          history: currentMessages,
-        }),
-      });
-      const data = await response.json();
-      const endTime = Date.now();
-      const timeTaken = Math.round((endTime - startTime) / 1000);
-      const reasoning = `Razonando durante ${timeTaken} segundo${timeTaken !== 1 ? "s" : ""}`;
-
-      let response_text = data.response || "No se recibió respuesta.";
-
-      const marker = "Asistente (responde brevemente en una sola oración, sin repetir el prompt y finaliza con un cierre breve):";  
-      if (response_text.includes(marker)) {  
-          response_text = response_text.split(marker)[1].trim(); // Solo ajusta desde el marcador  
-      } 
-
-      const botMessage = {
-        role: "bot",
-        text: response_text,
-        reasoning: reasoning,
+    setChatHistories((prev) => {
+      const updated = [...prev];
+      updated[currentChatIndex] = {
+        ...updated[currentChatIndex],
+        messages: [...updated[currentChatIndex].messages, errorMsg],
       };
+      return updated;
+    });
+  }
 
-      setChatHistories((prev) => {
-        const updated = [...prev];
-        updated[currentChatIndex] = {
-          ...updated[currentChatIndex],
-          messages: [...updated[currentChatIndex].messages, botMessage],
-        };
-        return updated;
-      });
-    } catch (error) {
-      console.error("API Error:", error);
-      const endTime = Date.now();
-      const timeTaken = Math.round((endTime - startTime) / 1000);
-      const reasoning = `Razonando durante ${timeTaken} segundo${timeTaken !== 1 ? "s" : ""}`;
-      const errorMsg = {
-        role: "bot",
-        text: "⚠️ Error al obtener respuesta.",
-        reasoning: reasoning,
-      };
+  setLoading(false);
+};
 
-      setChatHistories((prev) => {
-        const updated = [...prev];
-        updated[currentChatIndex] = {
-          ...updated[currentChatIndex],
-          messages: [...updated[currentChatIndex].messages, errorMsg],
-        };
-        return updated;
-      });
-    }
-    setLoading(false);
-  };
 
   // Get CSS classes based on visual mode
   const getVisualModeClasses = () => {
