@@ -411,7 +411,7 @@ export default function NeuratekChat() {
     const startTime = Date.now();
 
     try {
-      const response = await fetch("https://neuratek.cl:80/ask/", {
+      const response = await fetch("https://neuratek.cl/ask/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
