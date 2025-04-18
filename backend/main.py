@@ -61,7 +61,9 @@ async def generate_response(request: RequestInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
 
-# Para pruebas locales
+# Para pruebas locales (y Render)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Usa el puerto dinámico proporcionado por Render a través de la variable de entorno PORT
+    port = int(os.getenv("PORT", 8000))  # Si no se encuentra la variable de entorno, usa 8000
+    uvicorn.run(app, host="0.0.0.0", port=port)
