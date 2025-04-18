@@ -14,7 +14,7 @@ app = FastAPI()
 # Habilitar CORS (para permitir que React envíe solicitudes a FastAPI)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambiar "*" por los orígenes exactos en producción
+    allow_origins=["https://neuratek.cl","http://localhost:3000"],  # Cambiar "*" por los orígenes exactos en producción
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
