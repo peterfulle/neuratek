@@ -13,8 +13,6 @@ import {
   FaChevronDown,
   FaClipboard,
   FaMagic,
-  FaLightbulb,
-  FaExclamationCircle,
   FaCog,
   FaCopy
 } from "react-icons/fa";
