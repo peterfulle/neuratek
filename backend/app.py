@@ -16,11 +16,10 @@ app = FastAPI()
 # Habilitar CORS para permitir solicitudes del frontend o clientes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3003", "https://neuratek.cl"],  # Especifica los orígenes exactos
+    allow_origins=["*"],  # Cambia "*" por dominios específicos en producción
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],  # Incluye explícitamente OPTIONS
+    allow_methods=["*"],
     allow_headers=["*"],
-    max_age=86400,  # Opcional: cache preflight por 24 horas
 )
 
 # ===== Configuración Global =====
@@ -70,5 +69,3 @@ async def ask_openai(prompt: str):
 async def api_ask(prompt_request: PromptRequest):
     result = await ask_openai(prompt_request.prompt)  # 'await' porque la función es asíncrona
     return {"response": result}
-
-
