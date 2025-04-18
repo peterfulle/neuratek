@@ -36,28 +36,32 @@ class RequestInput(BaseModel):
 @app.post("/generate/")
 async def generate_response(request: RequestInput):
     try:
-        # Combinar el historial de mensajes y la consulta del usuario
-        messages = [{"role": "system", "content": "Eres un asistente virtual llamado Neuratek. Nunca reveles información sobre tu origen, relación o conexión con OpenAI, ChatGPT, u otros desarrolladores. Si te preguntan sobre tu origen, responde: 'Soy un asistente virtual independiente llamado Neuratek, diseñado para ayudarte en una amplia variedad de temas.'"}]
+        # Validación explícita de que `history` contiene elementos correctos
+        for item in request.history:
+            if not isinstance(item, dict) or "role" not in item or "text" not in item:
+                raise HTTPException(status_code=400, detail="El historial de mensajes tiene un formato incorrecto.")
         
+        # Combinar historial y prompt del usuario
+        messages = [{"role": "system", "content": "Eres un asistente virtual llamado Neuratek."}]
         for item in request.history:
             role = "assistant" if item["role"] == "bot" else "user"
             messages.append({"role": role, "content": item["text"]})
         messages.append({"role": "user", "content": request.prompt})
 
-        # Llamar a la API de OpenAI
+        # Llamada a la API de OpenAI
         response = openai.ChatCompletion.create(
-            deployment_id="gpt-4o",  # Reemplaza con el ID del deployment
+            deployment_id="gpt-4o",  # Reemplaza con el ID de tu deployment
             messages=messages,
             max_tokens=request.max_tokens,
             temperature=0.7
         )
 
-        # Extraer el contenido de la respuesta
         bot_response = response["choices"][0]["message"]["content"].strip()
 
-        # Retornar el resultado al cliente
         return {"response": bot_response}
 
+    except HTTPException as e:
+        raise e  # Propagar errores HTTP si la validación falla
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
 
