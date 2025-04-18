@@ -1,3 +1,4 @@
+# En backend/main.py
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,13 +12,14 @@ load_dotenv()
 # ===== Configuración inicial =====
 app = FastAPI()
 
-# Habilitar CORS (para permitir que React envíe solicitudes a FastAPI)
+# Habilitar CORS (mejorado para manejar preflight requests)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://neuratek.cl","http://localhost:3000"],  # Cambiar "*" por los orígenes exactos en producción
+    allow_origins=["https://neuratek.cl", "http://localhost:3003", "http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],  # Incluye OPTIONS explícitamente
     allow_headers=["*"],
+    max_age=86400,  # Cache para preflight requests (24 horas)
 )
 
 # Configuración de OpenAI
@@ -26,13 +28,17 @@ openai.api_version = os.getenv("AZURE_API_VERSION", "2024-05-01-preview")
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT", "https://neuratek.openai.azure.com/")
 openai.api_key = os.getenv("AZURE_OPENAI_KEY")
 
-# Modelo de datos para la solicitud
+# Modelo de datos para ambos endpoints
 class RequestInput(BaseModel):
     prompt: str
     max_tokens: int = 300
     history: list = []  # Historial de mensajes
 
-# Endpoint para manejar las solicitudes del cliente
+# Modelo para el endpoint /ask/ (compatible con el frontend actual)
+class PromptRequest(BaseModel):
+    prompt: str
+
+# Endpoint original /generate/
 @app.post("/generate/")
 async def generate_response(request: RequestInput):
     try:
@@ -64,6 +70,18 @@ async def generate_response(request: RequestInput):
         raise e  # Propagar errores HTTP si la validación falla
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
+
+# NUEVO ENDPOINT que coincide con lo que espera el frontend
+@app.post("/ask/")
+async def api_ask(prompt_request: PromptRequest):
+    # Convertir el formato simple a RequestInput
+    request = RequestInput(
+        prompt=prompt_request.prompt,
+        max_tokens=300,
+        history=[]  # En este caso no usamos history desde el endpoint /ask/
+    )
+    # Llamar al mismo proceso del endpoint /generate/
+    return await generate_response(request)
 
 # Para pruebas locales (y Render)
 if __name__ == "__main__":
