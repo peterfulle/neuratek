@@ -16,6 +16,9 @@ import {
   FaCog,
   FaCopy
 } from "react-icons/fa";
+import { API_BASE_URL } from './config';
+
+
 
 export default function NeuratekChat() {
   // Load history from localStorage or initialize with empty chat
@@ -377,7 +380,8 @@ export default function NeuratekChat() {
     setSidebarContextMenu((prev) => ({ ...prev, visible: false }));
   };
 
-  // Send message and get response
+
+  // Reemplazar la función sendMessage con esta versión actualizada
   const sendMessage = async () => {
     if (!inputText.trim() || loading) return;
     setLoading(true);
@@ -411,7 +415,7 @@ export default function NeuratekChat() {
     const startTime = Date.now();
 
     try {
-      const response = await fetch("http://localhost:8000/ask/", {
+      const response = await fetch(`${API_BASE_URL}/ask/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

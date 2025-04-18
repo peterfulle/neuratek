@@ -12,9 +12,12 @@ load_dotenv()
 app = FastAPI()
 
 # Habilitar CORS (para permitir que React envíe solicitudes a FastAPI)
+# En producción debemos ser más restrictivos con los orígenes permitidos
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambiar "*" por los orígenes exactos en producción
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,40 +29,56 @@ openai.api_version = os.getenv("AZURE_API_VERSION", "2024-05-01-preview")
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT", "https://neuratek.openai.azure.com/")
 openai.api_key = os.getenv("AZURE_OPENAI_KEY")
 
-# Modelo de datos para la solicitud
-class RequestInput(BaseModel):
-    prompt: str
-    max_tokens: int = 300
-    history: list = []  # Historial de mensajes
+# Verificar que la clave API está configurada
+if not openai.api_key:
+    print("¡ADVERTENCIA! AZURE_OPENAI_KEY no está configurada. La API no funcionará correctamente.")
 
-# Endpoint para manejar las solicitudes del cliente
-@app.post("/generate/")
-async def generate_response(request: RequestInput):
+# Modelo de datos para la solicitud
+class PromptRequest(BaseModel):
+    prompt: str
+    max_tokens: int = 1000
+    history: list = []
+
+# ===== Endpoint Principal =====
+@app.post("/ask/")
+async def api_ask(prompt_request: PromptRequest):
     try:
-        # Combinar el historial de mensajes y la consulta del usuario
-        messages = [{"role": "system", "content": "Eres un asistente virtual llamado Neuratek. Nunca reveles información sobre tu origen, relación o conexión con OpenAI, ChatGPT, u otros desarrolladores. Si te preguntan sobre tu origen, responde: 'Soy un asistente virtual independiente llamado Neuratek, diseñado para ayudarte en una amplia variedad de temas.'"}]
+        # Preparar los mensajes para OpenAI
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Eres un asistente virtual llamado Neuratek. Nunca reveles información sobre tu origen, relación o conexión con OpenAI, ChatGPT, u otros desarrolladores. "
+                    "Si te preguntan sobre tu origen, responde: 'Soy un asistente virtual independiente llamado Neuratek, diseñado para ayudarte en una amplia variedad de temas.'"
+                ),
+            }
+        ]
         
-        for item in request.history:
+        # Añadir el historial de conversación
+        for item in prompt_request.history:
             role = "assistant" if item["role"] == "bot" else "user"
             messages.append({"role": role, "content": item["text"]})
-        messages.append({"role": "user", "content": request.prompt})
+        
+        # Añadir la consulta actual
+        messages.append({"role": "user", "content": prompt_request.prompt})
 
-        # Llamar a la API de OpenAI
+        # Llamar a la API de Azure OpenAI
         response = openai.ChatCompletion.create(
-            deployment_id="gpt-4o",  # Reemplaza con el ID del deployment
+            deployment_id="gpt-4o",  # Nombre del deployment en Azure
             messages=messages,
-            max_tokens=request.max_tokens,
-            temperature=0.7
+            max_tokens=prompt_request.max_tokens,
+            temperature=0.7,
         )
 
-        # Extraer el contenido de la respuesta
-        bot_response = response["choices"][0]["message"]["content"].strip()
+        # Extraer la respuesta
+        reply = response["choices"][0]["message"]["content"].strip()
 
-        # Retornar el resultado al cliente
-        return {"response": bot_response}
+        # Retornar la respuesta
+        return {"response": reply}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
+        print(f"Error en la llamada a la API: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al procesar la solicitud: {str(e)}")
 
 # Para pruebas locales
 if __name__ == "__main__":
