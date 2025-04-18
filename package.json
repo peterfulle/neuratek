@@ -1,0 +1,13 @@
+{
+    "name": "neuratek-chat",
+    "version": "1.0.0",
+    "description": "Aplicación de chat con IA utilizando Azure OpenAI",
+    "scripts": {
+      "start": "cd backend && uvicorn main:app --host 0.0.0.0 --port 8000",
+      "build": "cd frontend && npm install && npm run build"
+    },
+    "engines": {
+      "node": ">=14.0.0",
+      "npm": ">=6.0.0"
+    }
+  }
