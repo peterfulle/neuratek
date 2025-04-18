@@ -81,4 +81,4 @@ Esta aplicación está configurada para ser desplegada como una Web App de Azure
 
 ## Licencia
 
-© 2025 - Todos los derechos reservados
+© 2025 - Todos los derechos reservados🔄 Activando workflow
