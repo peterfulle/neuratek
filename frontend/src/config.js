@@ -8,8 +8,8 @@ if (isDevelopment) {
   // URL para desarrollo local
   baseUrl = "http://localhost:8000";
 } else {
-  // URL para producción con proxy CORS
-  baseUrl = "https://corsproxy.io/?" + encodeURIComponent("https://neuratek-backend-e7haeehjfmfkhchv.canadacentral-01.azurewebsites.net");
+  // URL de tu proxy personalizado en Cloudflare Workers
+  baseUrl = "https://neuratek.alejandroiglesias.workers.dev";
 }
 
 export const API_BASE_URL = baseUrl;
