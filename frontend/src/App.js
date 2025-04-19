@@ -414,21 +414,21 @@ export default function NeuratekChat() {
     const startTime = Date.now();
   
     try {
-      // Modificar la llamada fetch con opciones adicionales
+      // Modificar la llamada fetch con opciones adicionales////
       const response = await fetch(`${API_BASE_URL}/ask/`, {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Origin": "https://neuratek.cl"
         },
-        // Importante: no incluir credentials si estás permitiendo todos los orígenes
-        mode: 'cors', // Asegurarse de que usamos el modo CORS
+        mode: 'cors',
         body: JSON.stringify({
           prompt: userMessageForAPI,
           max_tokens: 1000,
           history: currentMessages,
         }),
       });
-      
+
       const data = await response.json();
       const endTime = Date.now();
       const timeTaken = Math.round((endTime - startTime) / 1000);
