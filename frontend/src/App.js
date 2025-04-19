@@ -414,14 +414,13 @@ export default function NeuratekChat() {
     const startTime = Date.now();
   
     try {
-      // Modificar la llamada fetch con opciones adicionales////
+      // Modificar la llamada fetch con opciones adicionales
       const response = await fetch(`${API_BASE_URL}/ask/`, {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json",
-          "Origin": "https://neuratek.cl"
+          "Content-Type": "application/json"
         },
-        mode: 'cors',
+        // Quita "mode: 'cors'" ya que es el valor por defecto y podría estar causando problemas
         body: JSON.stringify({
           prompt: userMessageForAPI,
           max_tokens: 1000,

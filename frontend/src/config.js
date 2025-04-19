@@ -1,11 +1,15 @@
-// Configuración dinámica de URLs de API
-const getApiBaseUrl = () => {
-  // En producción, usar la URL completa del backend de Azure
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://neuratek-backend-e7haeehjfmfkhchv.canadacentral-01.azurewebsites.net';
-  }
-  // En desarrollo, apuntar a la instancia local de FastAPI
-  return 'http://localhost:8000';
-};
+// config.js
+const isDevelopment = window.location.hostname === "localhost" || 
+                      window.location.hostname === "127.0.0.1";
 
-export const API_BASE_URL = getApiBaseUrl();
+let baseUrl;
+
+if (isDevelopment) {
+  // URL para desarrollo local
+  baseUrl = "http://localhost:8000";
+} else {
+  // URL para producción con proxy CORS
+  baseUrl = "https://corsproxy.io/?" + encodeURIComponent("https://neuratek-backend-e7haeehjfmfkhchv.canadacentral-01.azurewebsites.net");
+}
+
+export const API_BASE_URL = baseUrl;
